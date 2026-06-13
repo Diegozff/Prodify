@@ -7,13 +7,20 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: company } = await supabase
-    .from("companies")
-    .select("name")
-    .eq("owner_id", user?.id)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, companies(name)")
+    .eq("id", user?.id ?? "")
     .maybeSingle();
 
-  const companyName = company?.name ?? user?.email ?? "tu empresa";
+  const companies = profile?.companies as unknown as
+    | { name: string }
+    | { name: string }[]
+    | null;
+  const companyName =
+    (Array.isArray(companies) ? companies[0]?.name : companies?.name) ??
+    user?.email ??
+    "tu empresa";
 
   return (
     <div className="max-w-2xl">
