@@ -7,6 +7,9 @@ type Stage = {
   id: string;
   status: string;
   notes: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  responsible_id: string | null;
   stages_config: {
     id: string;
     name: string;
@@ -38,6 +41,8 @@ type Order = {
   materials: Material[];
 };
 
+type Profile = { id: string; full_name: string | null };
+
 const PRIORITY_BADGE: Record<string, string> = {
   Baja: "bg-gray-100 text-gray-600",
   Normal: "bg-blue-100 text-blue-700",
@@ -66,20 +71,30 @@ export default async function OrderDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("work_orders")
-    .select(
-      `id, number, client_name, description, priority, status, due_date,
-       purchase_order, notes, created_at,
-       wo_stages(id, status, notes, stages_config(id, name, color, order_index)),
-       materials(id, description, quantity, unit, supplied_by)`
-    )
-    .eq("id", id)
-    .single();
+  const [{ data }, { data: profiles }] = await Promise.all([
+    supabase
+      .from("work_orders")
+      .select(
+        `id, number, client_name, description, priority, status, due_date,
+         purchase_order, notes, created_at,
+         wo_stages(
+           id, status, notes, start_date, end_date, responsible_id,
+           stages_config(id, name, color, order_index)
+         ),
+         materials(id, description, quantity, unit, supplied_by)`
+      )
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("profiles")
+      .select("id, full_name")
+      .order("full_name"),
+  ]);
 
   if (!data) notFound();
 
   const order = data as unknown as Order;
+  const companyProfiles: Profile[] = (profiles ?? []) as Profile[];
 
   const stages = [...(order.wo_stages ?? [])].sort(
     (a, b) =>
@@ -184,6 +199,11 @@ export default async function OrderDetailPage({
                 name={stage.stages_config?.name ?? "Etapa"}
                 color={stage.stages_config?.color ?? "#6366f1"}
                 status={stage.status}
+                responsibleId={stage.responsible_id}
+                startDate={stage.start_date}
+                endDate={stage.end_date}
+                notes={stage.notes}
+                profiles={companyProfiles}
               />
             ))}
           </div>
