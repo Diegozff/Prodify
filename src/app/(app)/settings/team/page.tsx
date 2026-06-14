@@ -18,11 +18,18 @@ export default async function TeamPage() {
 
   const companyId = currentProfile.company_id;
 
+  // Always OR in the current user so they appear even when RLS restricts
+  // cross-profile reads.  If companyId is available, also pull all company
+  // members — works when the RLS policy allows company_id = my_company_id().
+  const memberFilter = companyId
+    ? `company_id.eq.${companyId},id.eq.${user!.id}`
+    : `id.eq.${user!.id}`;
+
   const [{ data: members }, { data: rawInvitations }] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, full_name, email, role, is_active")
-      .eq("company_id", companyId)
+      .or(memberFilter)
       .order("full_name"),
     supabase
       .from("invitations")
