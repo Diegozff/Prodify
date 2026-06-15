@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ClipboardList, BarChart2, Settings, Layers, Users } from "lucide-react";
+import { LayoutDashboard, ClipboardList, BarChart2, Settings, Layers, Users, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -28,6 +28,7 @@ const NAV = [
     subItems: [
       { href: "/settings/stages", label: "Etapas", icon: Layers },
       { href: "/settings/team", label: "Equipo", icon: Users },
+      { href: "/settings/billing", label: "Billing", icon: CreditCard },
     ],
   },
 ];
